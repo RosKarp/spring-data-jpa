@@ -11,4 +11,3 @@ public class Application {
 	}
 
 }
-// дошел до 36 мин
