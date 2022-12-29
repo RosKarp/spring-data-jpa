@@ -3,15 +3,15 @@ package ru.gb.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import ru.gb.dto.ProductDto;
 import ru.gb.model.Product;
 import ru.gb.service.ProductService;
 
-@Controller
-@RequestMapping("/app/products")
-public class  RestController {
+@RestController
+@RequestMapping("/api/v1/products")     // резерв для смены версий
+public class ProductController {
 
     private ProductService productService;
     @Autowired
@@ -19,9 +19,8 @@ public class  RestController {
         this.productService = productService;
     }
 
-    @GetMapping("")         // для ДЗ 8
-    @ResponseBody
-    public Page<Product> getProducts(
+    @GetMapping("")         // для ДЗ 9
+    public Page<ProductDto> getProducts(
             @RequestParam(name = "max", required = false) Integer maxPrice,
             @RequestParam(name = "min", required = false) Integer minPrice,
             @RequestParam(name = "p", defaultValue = "1") Integer page
@@ -29,30 +28,34 @@ public class  RestController {
         if (page < 1) {
             page = 1;
         }
-        return productService.find(minPrice, maxPrice, page);
+        return productService.find(minPrice, maxPrice, page).map(product -> new ProductDto(product));
     }
 
-    @GetMapping("/delete/{id}")     // для ДЗ 8
+    @DeleteMapping("/{id}")     // для ДЗ 9
     public void deleteProductById(@PathVariable Integer id) {
         productService.deleteProductById(id);
     }
 
-    @GetMapping("/{id}")        // запрос Json продукта в адресной строке
-    @ResponseBody
+    @GetMapping("/{id}")        // запрос Json продукта в адресной строке (устарело, теперь передаем Dto)
     public Product getProductById(@PathVariable Integer id) {
         return productService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
-    @GetMapping("/new")                  // вывод формы для добавления
-    public String showFormPage() {
-        return "addProductForm";
+    @PostMapping("")        //добавление продукта через Dto
+    public ProductDto saveNewProductDto(@RequestBody ProductDto productDto) {
+        Product product = new Product();
+        product.setId(null);
+        product.setTitle(productDto.getTitle());
+        product.setprice(productDto.getprice());
+        return new ProductDto(productService.save(product));
     }
-
-    @PostMapping("")        //добавление продукта через форму
-    public String addProduct(@RequestParam String title, @RequestParam Integer price) {
-        Product product = new Product(title, price);
-        productService.save(product);
-        return "redirect:/app/products";
+    @PutMapping("")     //обновление продукта через Dto
+    public ProductDto updateProductDto(@RequestBody ProductDto productDto) {
+        Product product = new Product();
+        product.setId(productDto.getId());
+        product.setTitle(productDto.getTitle());
+        product.setprice(productDto.getprice());
+        return new ProductDto(productService.save(product));
     }
 }
             // ниже к ДЗ не относится, оставлено на память )
@@ -62,7 +65,10 @@ public class  RestController {
     public List<Product> allProductsJSON() {
         return  productService.getAll();
     }
-
+    @GetMapping("/new")                  // вывод формы для добавления
+    public String showFormPage() {
+        return "addProductForm";
+    }
     @GetMapping("/priceRange")
     @ResponseBody
     public List<Product> allProductsPriceRange(@RequestParam(defaultValue = "0") Integer min, @RequestParam (defaultValue = "2000000") Integer max) {
