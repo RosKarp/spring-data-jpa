@@ -1,13 +1,16 @@
 package ru.gb.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import ru.gb.model.Product;
-import java.util.List;
 import java.util.Optional;
 
-public interface ProductRepository extends JpaRepository<Product, Integer> {
+public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     Optional<Product> findById(Integer id);
-    List<Product> findAll();
+    Page<Product> findAll(Specification<Product> spec, Pageable p);
     void deleteById(Integer id);
     Product save(Product product);
 }
