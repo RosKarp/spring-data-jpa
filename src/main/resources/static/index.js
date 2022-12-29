@@ -1,5 +1,5 @@
  angular.module('app', []).controller('indexController', function ($scope, $http) {
-    const contextPath = 'http://localhost:8080/app/products';
+    const contextPath = 'http://localhost:8080/api/v1/products';
      $scope.loadProducts = function () {
          $http({
              url: contextPath,
@@ -11,11 +11,22 @@
              }
          }).then(function (response) {$scope.products = response.data.content;});
      };
-        $scope.deleteProduct = function (productId) {
-            $http.get(contextPath + '/delete/' + productId)
-                .then(function (response) {
+        $scope.deleteProduct = function (productId) {       // ДЗ 9
+            $http.delete(contextPath + '/' + productId)
+                .then(function () {
                     $scope.loadProducts();
                 })
+        };
+        $scope.newProduct = function () {           // ДЗ 9
+            if ($scope.newProdDto.id != null) {             // разделение save or update
+                $http.put(contextPath, $scope.newProdDto).then(function () {
+                    $scope.loadProducts();
+                });
+            } else {
+                $http.post(contextPath, $scope.newProdDto).then(function () {
+                    $scope.loadProducts();
+                });
+            }
         };
     $scope.loadProducts();
 });

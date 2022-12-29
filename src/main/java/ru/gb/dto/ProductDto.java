@@ -1,28 +1,23 @@
-package ru.gb.model;
+package ru.gb.dto;
 
-import jakarta.persistence.*;
-import lombok.Data;
+import ru.gb.model.Product;
 
-@Data
-@Entity
-@Table(name = "products")
-public class Product {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+public class ProductDto {       // обертка над Product для обмена с фронтом
     private Integer id;
-
-    @Column(name = "title")
     private String title;
-
-    @Column(name = "price")
     private Integer price;
 
-    public Product(String title, Integer price) {
+    public ProductDto(Integer id, String title, Integer price) {
+        this.id = id;
         this.title = title;
         this.price = price;
     }
-    public Product() { }
+    public ProductDto(Product product) {
+        this.id = product.getId();
+        this.title = product.getTitle();
+        this.price = product.getprice();
+    }
+    public ProductDto() {}
 
     public Integer getId() {
         return id;
@@ -43,10 +38,5 @@ public class Product {
     }
     public void setprice(Integer price) {
         this.price = price;
-    }
-
-    @Override
-    public String toString() {
-        return "id = " + id + "   " + title + "   price = " + price;
     }
 }
