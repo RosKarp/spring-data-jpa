@@ -1,24 +1,29 @@
 package ru.gb.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import ru.gb.converters.ProductConverter;
 import ru.gb.dto.ProductDto;
+import ru.gb.exceptions.ResourceNotFoundException;
 import ru.gb.model.Product;
 import ru.gb.service.ProductService;
+import ru.gb.validators.ProductValidator;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/products")     // резерв для смены версий
+@RequiredArgsConstructor
 public class ProductController {
-
-    private ProductService productService;
+    private final ProductConverter productConverter;
+    private final ProductService productService;
+    private final ProductValidator productValidator;
+    /*
     @Autowired
     public void setProductService(ProductService productService) {
         this.productService = productService;
-    }
-
+    }*/
+//
     @GetMapping("")         // для ДЗ 9
     public Page<ProductDto> getProducts(
             @RequestParam(name = "max", required = false) Integer maxPrice,
@@ -28,34 +33,46 @@ public class ProductController {
         if (page < 1) {
             page = 1;
         }
-        return productService.find(minPrice, maxPrice, page).map(product -> new ProductDto(product));
+        return productService.find(minPrice, maxPrice, page).map(product -> productConverter.entityToDto(product));
     }
-
     @DeleteMapping("/{id}")     // для ДЗ 9
     public void deleteProductById(@PathVariable Integer id) {
         productService.deleteProductById(id);
     }
-
     @GetMapping("/{id}")        // запрос Json продукта в адресной строке (устарело, теперь передаем Dto)
-    public Product getProductById(@PathVariable Integer id) {
-        return productService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    public ProductDto getProductById(@PathVariable Integer id) {
+        Product product = productService.findById(id).orElseThrow(() -> new ResourceNotFoundException("Продукт не найден в базе, id: " + id));
+        return productConverter.entityToDto(product);
     }
-
     @PostMapping("")        //добавление продукта через Dto
     public ProductDto saveNewProductDto(@RequestBody ProductDto productDto) {
-        Product product = new Product();
-        product.setId(null);
-        product.setTitle(productDto.getTitle());
-        product.setprice(productDto.getprice());
-        return new ProductDto(productService.save(product));
+        productValidator.validate(productDto);
+        Product product = productConverter.dtoToEntity(productDto);
+        product = productService.save(product);
+        return productConverter.entityToDto(product);
     }
     @PutMapping("")     //обновление продукта через Dto
     public ProductDto updateProductDto(@RequestBody ProductDto productDto) {
-        Product product = new Product();
-        product.setId(productDto.getId());
-        product.setTitle(productDto.getTitle());
-        product.setprice(productDto.getprice());
-        return new ProductDto(productService.save(product));
+        productValidator.validate(productDto);
+        Product product = productService.update(productDto);
+        return productConverter.entityToDto(product);
+    }
+    // добавлено для ДЗ 10
+
+    @GetMapping("/to_cart/{Id}/{Title}/{Price}")
+    public void addProductDtoToCart(@PathVariable Integer Id, @PathVariable String Title, @PathVariable Integer Price) {
+        ProductDto productDto = new ProductDto(Id, Title, Price);
+        productValidator.validate(productDto);
+        Product product = productConverter.dtoToEntity(productDto);
+        productService.addToCart(product);
+    }
+    @DeleteMapping("/delete_from_cart/{id}")
+    public void deleteProductFromCart(@PathVariable Integer id) {
+        productService.deleteProductByIdFromCart(id);
+    }
+    @GetMapping("/load_cart")
+    public List<ProductDto> getAllCart() {
+        return productService.getCart().stream().map(productConverter::entityToDto).toList();
     }
 }
             // ниже к ДЗ не относится, оставлено на память )

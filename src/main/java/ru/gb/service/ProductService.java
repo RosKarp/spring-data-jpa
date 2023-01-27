@@ -1,23 +1,31 @@
 package ru.gb.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.gb.carts.CartSingleton;
+import ru.gb.dto.ProductDto;
+import ru.gb.exceptions.ResourceNotFoundException;
 import ru.gb.model.Product;
 import ru.gb.repository.ProductRepository;
 import ru.gb.repository.specifications.ProductSpecifications;
+import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
+    private final ProductRepository productRepository;
+    private final CartSingleton cartSingleton;
 
-    private ProductRepository productRepository;
+    /*
     @Autowired
     public void setProductRepository(ProductRepository productRepository) {
         this.productRepository = productRepository;
-    }
+    }*/
 
     public Page<Product> find(Integer minPrice, Integer maxPrice, Integer page) {
         Specification<Product> spec = Specification.where(null);
@@ -40,6 +48,30 @@ public class ProductService {
 
     public Product save(Product product) {
         return productRepository.save(product);
+    }
+
+    @Transactional
+    public Product update(ProductDto productDto) {
+        Product product = productRepository.findById(productDto.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Невозможно обновить продукт, не найден в базе id: " + productDto.getId()));
+        product.setPrice(productDto.getPrice());
+        product.setTitle(productDto.getTitle());
+        return product;
+    }
+            // к ДЗ 10
+//
+    public void addToCart(Product product) {
+        cartSingleton.getProductsInCart().add(product);
+    }
+
+    public void deleteProductByIdFromCart(Integer id) {
+        Product p = cartSingleton.getProductsInCart().stream().filter(product -> product.getId().equals(id)).findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Невозможно удалить продукт, не найден в корзине id: " + id));
+        cartSingleton.getProductsInCart().remove(p);
+    }
+
+    public List<Product> getCart() {
+        return cartSingleton.getProductsInCart();
     }
 }
 
