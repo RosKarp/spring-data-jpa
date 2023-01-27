@@ -35,11 +35,13 @@
 
         $scope.newProduct = function () {           // ДЗ 9
             if ($scope.newProdDto.id != null) {             // разделение save or update
-                $http.put(contextPath, $scope.newProdDto).then(function () {
+
+                $http.put(contextPath, $scope.newProdDto, { headers: { Authorization: null} }).then(function () {
                     $scope.loadProducts();
                 });
             } else {
-                $http.post(contextPath, $scope.newProdDto).then(function () {
+                //console.log($scope.newProdDto);
+                $http.post(contextPath, $scope.newProdDto, { headers: {Authorization: null} }).then(function () {
                     $scope.loadProducts();
                 });
             }
@@ -47,3 +49,4 @@
     $scope.loadProducts();
      $scope.loadCart();
 });
+//

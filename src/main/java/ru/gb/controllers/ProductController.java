@@ -23,7 +23,7 @@ public class ProductController {
     public void setProductService(ProductService productService) {
         this.productService = productService;
     }*/
-
+//
     @GetMapping("")         // для ДЗ 9
     public Page<ProductDto> getProducts(
             @RequestParam(name = "max", required = false) Integer maxPrice,

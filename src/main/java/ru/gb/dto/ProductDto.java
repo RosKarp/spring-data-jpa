@@ -12,3 +12,4 @@ public class ProductDto {       // обертка над Product для обме
     private String title;
     private Integer price;
 }
+//

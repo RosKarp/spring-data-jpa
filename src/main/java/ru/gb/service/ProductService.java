@@ -59,7 +59,7 @@ public class ProductService {
         return product;
     }
             // к ДЗ 10
-
+//
     public void addToCart(Product product) {
         cartSingleton.getProductsInCart().add(product);
     }

@@ -14,3 +14,4 @@ public class CartSingleton {
 
     private List<Product> productsInCart = new ArrayList<>();
 }
+//
